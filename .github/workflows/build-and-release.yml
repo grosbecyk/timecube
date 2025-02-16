@@ -12,8 +12,10 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
-      - name: Checkout repository
+      - name: Checkout repository and submodules
         uses: actions/checkout@v4
+        with:
+          submodules: true  # Initialize and update submodules
 
       - name: Set up build environment (Ubuntu)
         if: matrix.os == 'ubuntu-latest'
