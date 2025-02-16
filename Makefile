@@ -1,4 +1,5 @@
 # Common flags
+CXX = g++
 MY_CFLAGS := -O2 -fPIC $(CFLAGS)
 MY_CXXFLAGS := -std=c++14 -O2 -fPIC $(CXXFLAGS)
 MY_CPPFLAGS := -DGRAPHENGINE_IMPL_NAMESPACE=timecube -DNDEBUG -Igraphengine/include -Itimecube -Ivsxx -Ivsxx/vapoursynth $(CPPFLAGS)
