@@ -15,27 +15,24 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up build environment
+      - name: Set up build environment (Ubuntu)
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential cmake
+          sudo apt-get install -y build-essential
 
       - name: Set up build environment (macOS)
         if: matrix.os == 'macos-latest'
         run: |
-          brew install cmake
+          brew install make
 
       - name: Set up build environment (Windows)
         if: matrix.os == 'windows-latest'
         run: |
-          choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
+          choco install make
 
       - name: Build plugin
         run: |
-          mkdir build
-          cd build
-          cmake ..
           make
 
       - name: Package artifacts
@@ -54,53 +51,3 @@ jobs:
         with:
           name: vscube-${{ matrix.os }}
           path: dist/
-
-  release:
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-
-      - name: Create release
-        id: create_release
-        uses: actions/create-release@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          draft: false
-          prerelease: false
-
-      - name: Upload release assets
-        uses: actions/upload-release-asset@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: artifacts/vscube-ubuntu-latest/vscube.so
-          asset_name: vscube-linux.so
-          asset_content_type: application/octet-stream
-
-      - name: Upload release assets (macOS)
-        uses: actions/upload-release-asset@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: artifacts/vscube-macos-latest/vscube.dylib
-          asset_name: vscube-macos.dylib
-          asset_content_type: application/octet-stream
-
-      - name: Upload release assets (Windows)
-        uses: actions/upload-release-asset@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: artifacts/vscube-windows-latest/vscube.dll
-          asset_name: vscube-windows.dll
-          asset_content_type: application/octet-stream
