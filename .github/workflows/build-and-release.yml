@@ -1,4 +1,4 @@
-name: Build and Release
+name: Build and Release with Intel OneAPI
 
 on:
   push:
@@ -10,12 +10,17 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest]  # Intel OneAPI is supported on Linux and Windows
     steps:
       - name: Checkout repository and submodules
         uses: actions/checkout@v4
         with:
           submodules: true  # Initialize and update submodules
+
+      - name: Set up Intel OneAPI
+        uses: intel/setup-oneapi@v1
+        with:
+          components: intel.oneapi.compiler  # Install the Intel C++ compiler
 
       - name: Set up build environment (Ubuntu)
         if: matrix.os == 'ubuntu-latest'
@@ -23,29 +28,20 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential
 
-      - name: Set up build environment (macOS)
-        if: matrix.os == 'macos-latest'
-        run: |
-          brew install make
-
       - name: Set up build environment (Windows)
         if: matrix.os == 'windows-latest'
         run: |
           choco install make
-          choco install mingw --version=12.2.0
-          echo "C:/ProgramData/chocolatey/lib/mingw/tools/install/mingw64/bin" >> $GITHUB_PATH
-
-      - name: Check CPU features
-        run: |
-          lscpu || echo "CPU feature check not supported on this platform"
 
       - name: Build plugin
         shell: bash
         run: |
-          if [ "${{ matrix.os }}" == "windows-latest" ]; then
-            make
-          else
-            make GENERIC_BUILD=1
+          if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
+            source /opt/intel/oneapi/setvars.sh
+            make CXX=icpx MY_CXXFLAGS="-std=c++14 -O2 -fPIC -fvisibility=hidden -D_GLIBCXX_USE_CXX11_ABI=0 -include cstddef"
+          elif [ "${{ matrix.os }}" == "windows-latest" ]; then
+            call "C:\Program Files (x86)\Intel\oneAPI\setvars.bat"
+            make CXX=icx MY_CXXFLAGS="-std:c++14 -O2 -fPIC -D_GLIBCXX_USE_CXX11_ABI=0 -include cstddef"
           fi
 
       - name: Package artifacts
@@ -54,8 +50,6 @@ jobs:
           mkdir -p dist
           if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
             cp vscube.so dist/
-          elif [ "${{ matrix.os }}" == "macos-latest" ]; then
-            cp vscube.dylib dist/
           elif [ "${{ matrix.os }}" == "windows-latest" ]; then
             cp vscube.dll dist/
           fi
