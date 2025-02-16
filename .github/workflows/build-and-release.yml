@@ -30,28 +30,33 @@ jobs:
 
       - name: Set up build environment (Windows)
         if: matrix.os == 'windows-latest'
-        shell: bash
         run: |
           choco install make
           choco install mingw --version=12.2.0
-          echo "C:/ProgramData/chocolatey/lib/mingw/tools/install/mingw64/bin" >> $GITHUB_PATH
-
-      - name: Detect compiler
-        id: detect_compiler
-        shell: bash
-        run: |
-          if g++ --version | grep -q "g++"; then
-            echo "COMPILER=gcc" >> $GITHUB_ENV
-          else
-            echo "COMPILER=clang" >> $GITHUB_ENV
-          fi
-
+          echo "C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       - name: Build plugin
         shell: bash
         run: |
           if [ "$COMPILER" = "gcc" ]; then
-            export MY_CXXFLAGS="-std=c++14 -O2 -fPIC -fvisibility=hidden -D_GLIBCXX_USE_CXX11_ABI=0 -include cstddef"
+            export MY_CXXFLAGS="-std=c++14 -O2 -fPIC -fvisibility=hidden -D_GLIBCXX_USE_CXX11_ABI=0"
           else
-            export MY_CXXFLAGS="-std=c++14 -O2 -fPIC -D_GLIBCXX_USE_CXX11_ABI=0 -include cstddef"
+            export MY_CXXFLAGS="-std=c++14 -O2 -fPIC -D_GLIBCXX_USE_CXX11_ABI=0"
           fi
           make MY_CXXFLAGS="$MY_CXXFLAGS"
+
+      - name: Package artifacts
+        run: |
+          mkdir -p dist
+          if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
+            cp vscube.so dist/
+          elif [ "${{ matrix.os }}" == "macos-latest" ]; then
+            cp vscube.dylib dist/
+          elif [ "${{ matrix.os }}" == "windows-latest" ]; then
+            cp vscube.dll dist/
+          fi
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: vscube-${{ matrix.os }}
+          path: dist/
