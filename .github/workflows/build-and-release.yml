@@ -33,18 +33,23 @@ jobs:
         run: |
           choco install make
           choco install mingw --version=12.2.0
-          echo "C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          echo "C:/ProgramData/chocolatey/lib/mingw/tools/install/mingw64/bin" >> $GITHUB_PATH
+
+      - name: Check CPU features
+        run: |
+          lscpu || echo "CPU feature check not supported on this platform"
+
       - name: Build plugin
         shell: bash
         run: |
-          if [ "$COMPILER" = "gcc" ]; then
-            export MY_CXXFLAGS="-std=c++14 -O2 -fPIC -fvisibility=hidden -D_GLIBCXX_USE_CXX11_ABI=0"
+          if [ "${{ matrix.os }}" == "windows-latest" ]; then
+            make
           else
-            export MY_CXXFLAGS="-std=c++14 -O2 -fPIC -D_GLIBCXX_USE_CXX11_ABI=0"
+            make GENERIC_BUILD=1
           fi
-          make MY_CXXFLAGS="$MY_CXXFLAGS"
 
       - name: Package artifacts
+        shell: bash
         run: |
           mkdir -p dist
           if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
