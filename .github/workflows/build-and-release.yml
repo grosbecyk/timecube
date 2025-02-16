@@ -1,4 +1,4 @@
-name: Build and Release with Intel OneAPI
+name: Build and Release
 
 on:
   push:
