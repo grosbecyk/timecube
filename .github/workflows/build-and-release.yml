@@ -30,13 +30,15 @@ jobs:
 
       - name: Set up build environment (Windows)
         if: matrix.os == 'windows-latest'
+        shell: bash
         run: |
           choco install make
           choco install mingw --version=12.2.0
-          echo "C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          echo "C:/ProgramData/chocolatey/lib/mingw/tools/install/mingw64/bin" >> $GITHUB_PATH
 
       - name: Detect compiler
         id: detect_compiler
+        shell: bash
         run: |
           if g++ --version | grep -q "g++"; then
             echo "COMPILER=gcc" >> $GITHUB_ENV
