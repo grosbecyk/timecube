@@ -14,7 +14,7 @@ COMPILER := $(shell $(CXX) --version | head -n 1)
 
 # Add -fvisibility-hidden only for GCC
 ifneq (,$(findstring g++,$(COMPILER)))
-    MY_CXXFLAGS += -fvisibility-hidden
+    MY_CXXFLAGS += -fvisibility=hidden
 endif
 
 # Platform-specific adjustments
